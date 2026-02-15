@@ -1,0 +1,23 @@
+name = "tonguekeeper-worker"
+main = "worker/src/index.ts"
+compatibility_date = "2024-12-01"
+
+# R2 bucket binding
+[[r2_buckets]]
+binding = "AUDIO_BUCKET"
+bucket_name = "tonguekeeper-audio"
+
+# KV namespace binding (replace IDs after `wrangler kv namespace create`)
+[[kv_namespaces]]
+binding = "CACHE"
+id = "29a89fb6240746bebeba269edc36b3ba"
+preview_id = "0f029cfe5ce7459489209f4d1aa52ec2"
+
+[vars]
+ENVIRONMENT = "production"
+ALLOWED_ORIGINS = "http://localhost:3000,https://tonguekeeper.vercel.app"
+
+# Worker route (optional — uncomment if using a custom domain)
+# [[routes]]
+# pattern = "api.tonguekeeper.com/*"
+# zone_name = "tonguekeeper.com"

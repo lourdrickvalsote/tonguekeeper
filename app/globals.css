@@ -1,0 +1,218 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "leaflet/dist/leaflet.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-plus-jakarta);
+  --font-mono: var(--font-jetbrains);
+  --font-serif: var(--font-dm-serif);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+
+  /* Agent colors — deeper tones for light backgrounds */
+  --color-agent-discovery: #1E40AF;
+  --color-agent-extraction: #047857;
+  --color-agent-crossref: #6D28D9;
+  --color-agent-orchestrator: #B45309;
+}
+
+:root {
+  --radius: 0.625rem;
+
+  /* Warm cream / parchment palette — refined */
+  --background: #FAF7F2;
+  --foreground: #1A1714;
+  --card: #FFFFFF;
+  --card-foreground: #1A1714;
+  --popover: #FFFFFF;
+  --popover-foreground: #1A1714;
+  --primary: #A3470A;
+  --primary-foreground: #FFFCF7;
+  --secondary: #EFEAE1;
+  --secondary-foreground: #3D3935;
+  --muted: #EFEAE1;
+  --muted-foreground: #6B6560;
+  --accent: #FDF2C4;
+  --accent-foreground: #7C3609;
+  --destructive: #C42B2B;
+  --border: #DDD6CC;
+  --input: #DDD6CC;
+  --ring: #A3470A;
+
+  /* Chart / agent colors */
+  --chart-1: #1E40AF;
+  --chart-2: #047857;
+  --chart-3: #6D28D9;
+  --chart-4: #A3470A;
+  --chart-5: #C42B2B;
+
+  /* Sidebar (left panel) */
+  --sidebar: #F3EDE4;
+  --sidebar-foreground: #1A1714;
+  --sidebar-primary: #A3470A;
+  --sidebar-primary-foreground: #FFFCF7;
+  --sidebar-accent: #EBE4D9;
+  --sidebar-accent-foreground: #1A1714;
+  --sidebar-border: #DDD6CC;
+  --sidebar-ring: #A3470A;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Warm scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #CFC7BC;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #B0A89E;
+}
+
+/* Resize handle */
+.resize-handle {
+  width: 5px;
+  cursor: col-resize;
+  position: relative;
+  flex-shrink: 0;
+  background: transparent;
+}
+.resize-handle::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 2px;
+  width: 1px;
+  background: var(--border);
+  transition: background 0.15s ease, width 0.15s ease, left 0.15s ease;
+}
+.resize-handle::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 3px;
+  height: 28px;
+  border-radius: 3px;
+  background: transparent;
+  transition: background 0.15s ease;
+}
+.resize-handle:hover::before {
+  width: 2px;
+  left: 1.5px;
+  background: var(--primary);
+}
+.resize-handle:hover::after {
+  background: var(--primary);
+}
+
+/* Agent status pulse animation */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.animate-pulse-dot {
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+/* Glow effect for active agents */
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 4px currentColor; }
+  50% { box-shadow: 0 0 12px currentColor; }
+}
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+/* Subtle shimmer for active event section */
+@keyframes shimmer-border {
+  0%, 100% { border-color: #D9A04020; }
+  50% { border-color: #D9A04050; }
+}
+.animate-shimmer-border {
+  animation: shimmer-border 2.5s ease-in-out infinite;
+}
+
+/* Leaflet popup overrides */
+.leaflet-popup-content-wrapper {
+  background: #FAF7F2;
+  color: #1A1714;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  border: 1px solid #DDD6CC;
+  font-family: var(--font-plus-jakarta), sans-serif;
+}
+.leaflet-popup-content {
+  margin: 12px 14px;
+  line-height: 1.5;
+}
+.leaflet-popup-tip {
+  background: #FAF7F2;
+  border: 1px solid #DDD6CC;
+  border-top: none;
+  border-right: none;
+}
+.leaflet-container {
+  font-family: var(--font-plus-jakarta), sans-serif;
+}
+
+/* Leaflet tile fix — override Tailwind's img base styles */
+.leaflet-container img,
+.leaflet-tile-pane img {
+  max-width: none !important;
+  max-height: none !important;
+}

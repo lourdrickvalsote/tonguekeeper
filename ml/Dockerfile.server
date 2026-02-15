@@ -1,0 +1,28 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# System dependencies: ffmpeg for audio conversion, yt-dlp for YouTube downloads
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ffmpeg && \
+    pip install --no-cache-dir yt-dlp && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Python dependencies (exclude faster-whisper & runpod — Whisper runs on RunPod, not here)
+COPY ml/requirements.txt /app/ml/requirements.txt
+RUN pip install --no-cache-dir \
+    fastapi>=0.115.0 \
+    "uvicorn[standard]>=0.34.0" \
+    python-dotenv>=1.1.0 \
+    anthropic>=0.40.0 \
+    requests~=2.31.0 \
+    pydub>=0.25.1
+
+# Copy project files (server needs ml/ + lib/cloudflare.py)
+COPY ml/ /app/ml/
+COPY lib/cloudflare.py /app/lib/cloudflare.py
+
+ENV PORT=3003
+
+CMD ["python", "-u", "ml/server.py"]
