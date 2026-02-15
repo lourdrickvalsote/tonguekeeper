@@ -29,15 +29,16 @@ const SPONSORS: { name: string; icon: LucideIcon }[] = [
 
 export function SponsorFooter() {
   return (
-    <div className="flex shrink-0 items-center justify-center gap-2.5 border-t border-border/40 bg-background/60 px-4 py-1.5">
-      <span className="shrink-0 text-[9px] text-muted-foreground/40 uppercase tracking-wider">
+    <div className="flex shrink-0 items-center justify-center gap-3 border-t border-border/30 bg-background/40 px-5 py-2">
+      <span className="shrink-0 text-[9px] text-muted-foreground/30 uppercase tracking-[0.15em]">
         Built with
       </span>
-      <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-0.5">
+      <div className="h-2.5 w-px bg-border/20" />
+      <div className="flex flex-wrap items-center justify-center gap-x-3.5 gap-y-0.5">
         {SPONSORS.map(({ name, icon: Icon }) => (
           <span
             key={name}
-            className="flex items-center gap-1 text-[9px] text-muted-foreground/40 transition-colors duration-200 hover:text-muted-foreground"
+            className="flex items-center gap-1 text-[9px] text-muted-foreground/30 transition-colors duration-200 hover:text-muted-foreground/70"
           >
             <Icon className="h-2.5 w-2.5" />
             {name}

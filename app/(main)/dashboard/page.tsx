@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import { AgentFeed } from "@/components/agent-feed/agent-feed";
 import { SearchPanel } from "@/components/search/search-panel";
 import { StatsBar } from "@/components/dashboard/stats-bar";
@@ -10,8 +10,10 @@ import { useAgentEventsContext } from "@/lib/websocket";
 import { useActiveLanguage } from "@/lib/active-language";
 import { ResizableLayout } from "@/components/ui/resizable-layout";
 import { PreservationDialog } from "@/components/search/PreservationDialog";
+import { LogoIcon } from "@/components/navigation/TongueKeeperLogo";
+import { fetchLanguages } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { Globe, Zap } from "lucide-react";
+import { Zap, Search, BookOpen, GitMerge } from "lucide-react";
 import type { LanguageEntry, LanguageMetadata } from "@/lib/types";
 
 function buildMetadata(lang: LanguageEntry): LanguageMetadata {
@@ -66,10 +68,13 @@ function DashboardContent() {
   return (
     <div className="flex h-full flex-col overflow-hidden bg-background">
       {/* Top bar */}
-      <header className="flex shrink-0 items-center justify-between border-b border-border/60 bg-background/80 backdrop-blur-sm px-5 py-2">
-        <h1 className="font-serif text-base tracking-tight text-foreground/80 select-none">
-          Preservation Dashboard
-        </h1>
+      <header className="flex shrink-0 items-center justify-between border-b border-border/40 bg-background/80 backdrop-blur-sm px-5 py-2.5">
+        <div className="flex items-center gap-2.5">
+          <LogoIcon size={18} className="text-primary/70" />
+          <h1 className="font-serif text-[15px] tracking-tight text-foreground/80 select-none">
+            Preservation Dashboard
+          </h1>
+        </div>
         {isArchiveMode && <StatsBar languageCode={activeLanguage?.iso_code} />}
       </header>
 
@@ -99,84 +104,262 @@ function DashboardContent() {
   );
 }
 
-const heroChildVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+// ── Animation Variants ──────────────────────────────────────────────────────
+
+const stagger = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.12, delayChildren: 0.1 } },
 };
 
-function WelcomeView({ onBeginClick }: { onBeginClick: () => void }) {
+const fadeUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] as const },
+  },
+};
+
+// ── Animated Count-Up ───────────────────────────────────────────────────────
+
+function AnimatedCount({
+  target,
+  suffix = "",
+}: {
+  target: number;
+  suffix?: string;
+}) {
+  const [count, setCount] = useState(0);
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+
+  useEffect(() => {
+    if (!inView || target === 0) return;
+    const duration = 1800;
+    const start = performance.now();
+
+    function step(now: number) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.floor(eased * target));
+      if (progress < 1) requestAnimationFrame(step);
+    }
+
+    requestAnimationFrame(step);
+  }, [inView, target]);
+
   return (
-    <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-      <motion.div
-        className="flex flex-col items-center gap-6 max-w-2xl"
-        initial="hidden"
-        animate="visible"
-        variants={{
-          hidden: {},
-          visible: { transition: { staggerChildren: 0.12 } },
-        }}
-      >
-        {/* Hero icon */}
-        <motion.div
-          variants={{
-            hidden: { opacity: 0, scale: 0.8 },
-            visible: { opacity: 1, scale: 1, transition: { type: "spring", stiffness: 200, damping: 20 } },
-          }}
-          className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20"
-        >
-          <Globe className="h-10 w-10 text-primary" />
-        </motion.div>
+    <span ref={ref}>
+      {count.toLocaleString()}
+      {suffix}
+    </span>
+  );
+}
 
-        {/* Heading */}
-        <motion.div variants={heroChildVariants}>
-          <h2 className="font-serif text-3xl tracking-tight text-foreground mb-3">
-            Preserve Endangered Languages with AI
-          </h2>
-          <p className="text-base text-muted-foreground leading-relaxed max-w-xl mx-auto">
-            TongueKeeper&apos;s autonomous agents discover, extract, and organize
-            vocabulary, grammar patterns, and audio recordings from across the
-            web&mdash;building comprehensive language archives in minutes.
-          </p>
-        </motion.div>
+// ── Feature Cards Config ────────────────────────────────────────────────────
 
-        {/* CTA */}
+const FEATURES = [
+  {
+    icon: Search,
+    title: "Discover",
+    description:
+      "Autonomous agents scour the web for dictionaries, grammars, and recordings in endangered languages.",
+    color: "#1E40AF",
+  },
+  {
+    icon: BookOpen,
+    title: "Extract",
+    description:
+      "AI-powered extraction pulls vocabulary and grammar patterns from diverse sources into structured archives.",
+    color: "#047857",
+  },
+  {
+    icon: GitMerge,
+    title: "Cross-Reference",
+    description:
+      "Intelligent verification links entries across sources, validating accuracy and building comprehensive records.",
+    color: "#6D28D9",
+  },
+];
+
+// ── Welcome View ────────────────────────────────────────────────────────────
+
+function WelcomeView({ onBeginClick }: { onBeginClick: () => void }) {
+  const [stats, setStats] = useState({
+    totalEndangered: 0,
+    criticallyEndangered: 0,
+    preserved: 0,
+  });
+
+  useEffect(() => {
+    fetchLanguages({ limit: 1 }).then((data) => {
+      setStats({
+        totalEndangered: data.stats.total_endangered,
+        criticallyEndangered: data.stats.critically_endangered,
+        preserved: data.stats.with_preservation_data,
+      });
+    });
+  }, []);
+
+  return (
+    <div className="flex flex-1 flex-col items-center overflow-y-auto">
+      <div className="flex flex-col items-center w-full max-w-3xl px-6 py-16">
         <motion.div
-          variants={{
-            hidden: { opacity: 0, y: 20 },
-            visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
-          }}
+          className="flex flex-col items-center w-full"
+          variants={stagger}
+          initial="hidden"
+          animate="visible"
         >
-          <Button
-            onClick={onBeginClick}
-            size="lg"
-            className="gap-2 px-8 py-6 text-base font-medium shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all"
+          {/* ── Heading ── */}
+          <motion.div variants={fadeUp} className="text-center mb-10">
+            <h2 className="font-serif text-4xl tracking-tight text-foreground mb-4">
+              Preserve Endangered Languages
+            </h2>
+            <p className="text-base text-muted-foreground leading-relaxed max-w-lg mx-auto">
+              Autonomous AI agents discover, extract, and cross-reference
+              linguistic data from across the web&mdash;building comprehensive
+              language archives in minutes.
+            </p>
+          </motion.div>
+
+          {/* ── Live Stats ── */}
+          <motion.div variants={fadeUp} className="w-full mb-10">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="flex-1 h-px bg-border/30" />
+              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/40 shrink-0 select-none">
+                The scale of what&apos;s at stake
+              </p>
+              <div className="flex-1 h-px bg-border/30" />
+            </div>
+
+            <div className="grid grid-cols-3 gap-8 text-center">
+              {[
+                {
+                  value: stats.totalEndangered,
+                  suffix: "+",
+                  label: "Languages at Risk",
+                },
+                {
+                  value: stats.criticallyEndangered,
+                  suffix: "",
+                  label: "Critically Endangered",
+                },
+                {
+                  value: stats.preserved,
+                  suffix: "",
+                  label: "Preserved by TongueKeeper",
+                },
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  className="flex flex-col items-center gap-1.5"
+                >
+                  <span className="font-serif text-3xl tabular-nums text-foreground">
+                    <AnimatedCount
+                      target={stat.value}
+                      suffix={stat.suffix}
+                    />
+                  </span>
+                  <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/50">
+                    {stat.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* ── CTA ── */}
+          <motion.div
+            variants={{
+              hidden: { opacity: 0, y: 20 },
+              visible: {
+                opacity: 1,
+                y: 0,
+                transition: {
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 24,
+                },
+              },
+            }}
+            className="mb-12"
           >
-            <Zap className="h-5 w-5" />
-            Begin Preservation
-          </Button>
-        </motion.div>
+            <Button
+              onClick={onBeginClick}
+              size="lg"
+              className="gap-2 px-8 py-5 text-[15px] font-medium rounded-lg shadow-md shadow-primary/15 hover:shadow-lg hover:shadow-primary/25 transition-all duration-200"
+            >
+              <Zap className="h-4 w-4" />
+              Begin Preservation
+            </Button>
+          </motion.div>
 
-        {/* Quick stats */}
-        <motion.div variants={heroChildVariants} className="flex items-center gap-8 text-sm text-muted-foreground mt-4">
-          <div className="flex flex-col items-center">
-            <span className="text-2xl font-bold text-foreground tabular-nums">3,000+</span>
-            <span>Endangered Languages</span>
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="text-2xl font-bold text-foreground tabular-nums">2-5 min</span>
-            <span>Average Preservation</span>
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="text-2xl font-bold text-foreground tabular-nums">100%</span>
-            <span>Automated</span>
-          </div>
-        </motion.div>
+          {/* ── How It Works ── */}
+          <motion.div variants={fadeUp} className="w-full mb-10">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="flex-1 h-px bg-border/30" />
+              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/40 shrink-0 select-none">
+                How it works
+              </p>
+              <div className="flex-1 h-px bg-border/30" />
+            </div>
 
-        {/* Footer */}
-        <motion.p variants={heroChildVariants} className="text-xs text-muted-foreground/50 max-w-md mt-2">
-          Built for TreeHacks 2026 &middot; Powered by Anthropic, Elastic, Perplexity, and more
-        </motion.p>
-      </motion.div>
+            <div className="grid grid-cols-3 gap-10">
+              {FEATURES.map((feature, i) => {
+                const stepNum = String(i + 1).padStart(2, "0");
+                return (
+                  <motion.div
+                    key={feature.title}
+                    className="text-left"
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.6 + i * 0.12 }}
+                  >
+                    {/* Step number */}
+                    <span
+                      className="font-serif text-5xl leading-none select-none"
+                      style={{ color: feature.color, opacity: 0.15 }}
+                    >
+                      {stepNum}
+                    </span>
+
+                    {/* Accent line */}
+                    <div
+                      className="h-px w-12 mt-3 mb-4"
+                      style={{ backgroundColor: feature.color, opacity: 0.4 }}
+                    />
+
+                    {/* Icon + Title */}
+                    <div className="flex items-center gap-2 mb-2">
+                      <feature.icon
+                        className="h-4 w-4"
+                        style={{ color: feature.color }}
+                      />
+                      <h3 className="font-serif text-[15px] tracking-tight text-foreground">
+                        {feature.title}
+                      </h3>
+                    </div>
+
+                    {/* Description */}
+                    <p className="text-[13px] text-muted-foreground/60 leading-relaxed">
+                      {feature.description}
+                    </p>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.div>
+
+          {/* ── Footer tagline ── */}
+          <motion.p
+            variants={fadeUp}
+            className="text-[11px] text-muted-foreground/40 text-center"
+          >
+            Built for TreeHacks 2026
+          </motion.p>
+        </motion.div>
+      </div>
     </div>
   );
 }

@@ -132,9 +132,9 @@ export async function runOrchestrator(req: PreservationRequest, signal?: AbortSi
       };
     },
 
-    onRunExtraction: async (content, url, title, type, language_code, language_name, onEntriesSaved, linguisticContext, visualContent) => {
+    onRunExtraction: async (content, url, title, type, language_code, language_name, onEntriesSaved, linguisticContext, visualContent, extractionSignal) => {
       const crawlResult = { url, title, type, content, visual_content: visualContent, metadata: {} } as Parameters<typeof runExtractionAgent>[0];
-      const result = await runExtractionAgent(crawlResult, language_code, language_name, onEntriesSaved, meta.glottocode, linguisticContext);
+      const result = await runExtractionAgent(crawlResult, language_code, language_name, onEntriesSaved, meta.glottocode, linguisticContext, extractionSignal);
 
       // Store for cross-referencing later
       extractionResults.set(title, result);

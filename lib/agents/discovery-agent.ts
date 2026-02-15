@@ -102,7 +102,6 @@ Use search_web to run search queries. Review the results carefully and report_so
 const BASE_TOOLS: Anthropic.Tool[] = [
   {
     name: "search_web",
-    cache_control: { type: "ephemeral" as const },
     description:
       "Search the web for resources related to an endangered language. Returns a list of URLs, titles, and descriptions found.",
     input_schema: {
@@ -119,7 +118,6 @@ const BASE_TOOLS: Anthropic.Tool[] = [
   },
   {
     name: "report_source",
-    cache_control: { type: "ephemeral" as const },
     description:
       "Report a discovered resource. Call this for each promising URL you find. This emits a real-time event to the dashboard and adds the URL to the processing queue.",
     input_schema: {
@@ -173,7 +171,6 @@ const BASE_TOOLS: Anthropic.Tool[] = [
 const BRIGHTDATA_TOOLS: Anthropic.Tool[] = [
   {
     name: "serp_api_search",
-    cache_control: { type: "ephemeral" as const },
     description:
       "Search the web using BrightData's SERP API with CAPTCHA bypass and geo-targeting. Use for non-English queries (e.g., in the contact language), geo-targeted searches, or when search_web returns poor results.",
     input_schema: {

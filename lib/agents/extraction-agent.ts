@@ -627,7 +627,8 @@ export async function runExtractionAgent(
   onSaveEntries: (entries: ExtractionEntry[]) => Promise<{ saved: number }>,
   onSaveGrammarPatterns?: (patterns: GrammarPattern[]) => Promise<{ saved: number }>,
   linguisticContext?: LinguisticContext,
-  visualContent?: VisualContent
+  visualContent?: VisualContent,
+  signal?: AbortSignal
 ): Promise<ExtractionAgentResult> {
   const client = new Anthropic({ maxRetries: 3 });
   const allEntries: ExtractionEntry[] = [];
@@ -691,6 +692,8 @@ export async function runExtractionAgent(
     let chunkSaved = 0;
 
     for (let turn = 0; turn < maxTurnsForSource(sourceType); turn++) {
+      if (signal?.aborted) break;
+
       let response: Anthropic.Message;
       try {
         response = await client.messages.create({
@@ -784,6 +787,8 @@ export async function runExtractionAgent(
     ];
 
     for (let turn = 0; turn < maxTurnsForSource(sourceType); turn++) {
+      if (signal?.aborted) break;
+
       let response: Anthropic.Message;
       try {
         response = await client.messages.create({
@@ -902,6 +907,8 @@ export async function runExtractionAgent(
 
   // Process chunks with limited parallelism
   for (let i = 0; i < totalChunks; i += CHUNK_CONCURRENCY) {
+    if (signal?.aborted) break;
+
     const batch = chunks.slice(i, i + CHUNK_CONCURRENCY);
     const results = await Promise.all(
       batch.map((chunk, offsetIdx) => processChunk(chunk, i + offsetIdx))

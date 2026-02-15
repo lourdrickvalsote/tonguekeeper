@@ -72,7 +72,8 @@ export async function runExtractionAgent(
   language_name: string,
   onEntriesSaved?: (count: number) => void,
   glottocode?: string,
-  linguisticContext?: LinguisticContext
+  linguisticContext?: LinguisticContext,
+  signal?: AbortSignal
 ): Promise<ExtractionResult> {
   const extractEvent = emitEvent("extraction", "extracting_vocabulary", "running", {
     title: crawlResult.title,
@@ -195,7 +196,8 @@ export async function runExtractionAgent(
       onSaveEntries,
       onSaveGrammarPatterns,
       linguisticContext,
-      crawlResult.visual_content
+      crawlResult.visual_content,
+      signal
     );
 
     // Log token usage

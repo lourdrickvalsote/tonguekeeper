@@ -92,7 +92,8 @@ export interface PipelineCallbacks {
       native_name?: string;
       macroarea?: string;
     },
-    visualContent?: VisualContent
+    visualContent?: VisualContent,
+    signal?: AbortSignal
   ) => Promise<PipelineExtractionResult>;
 
   onGetProcessedSources: (language_code: string) => Promise<Map<string, number>>;
@@ -361,6 +362,12 @@ export async function runPreservationPipeline(
             });
           }
 
+          // Bail if cancelled during crawl
+          if (signal?.aborted) {
+            sourceOutcomes.push({ url: source.url, title: source.title, type: source.type, status: "cancelled" });
+            return;
+          }
+
           // Content-hash dedup: skip if identical content already extracted from another URL
           const contentHash = createHash("sha256").update(crawlResult.content).digest("hex");
           if (contentHashes.has(contentHash)) {
@@ -416,7 +423,8 @@ export async function runPreservationPipeline(
                   native_name: meta.native_name,
                   macroarea: meta.macroarea,
                 },
-                crawlResult.visual_content
+                crawlResult.visual_content,
+                signal
               ),
               new Promise<never>((_, reject) =>
                 setTimeout(
@@ -502,6 +510,7 @@ export async function runPreservationPipeline(
         }
 
         // Cross-reference runs after semaphore release — doesn't block other source extractions
+        if (signal?.aborted) return;
         if (extractionResult && extractionResult.entry_count > 0) {
           try {
             callbacks.onEvent("orchestrator", "progress_update", "running", {
