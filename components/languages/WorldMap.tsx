@@ -6,7 +6,6 @@ import {
   TileLayer,
   CircleMarker,
   Popup,
-  ZoomControl,
   useMap,
 } from "react-leaflet";
 import {
@@ -14,17 +13,25 @@ import {
   ENDANGERMENT_COLORS,
   ENDANGERMENT_LABELS,
   MapVisualizationMode,
+  MapTheme,
 } from "@/lib/types";
 import { toHeatmapPoints, aggregateByCountry } from "@/lib/map-utils";
 import { HeatmapLayer } from "./map/HeatmapLayer";
 import { ChoroplethLayer } from "./map/ChoroplethLayer";
-import { MapVisualizationToggle } from "./map/MapVisualizationToggle";
-import { MapLegend } from "./map/MapLegend";
+import { MapControls } from "./map/MapControls";
 
-// ── Constants ───────────────────────────────────────────────────────────────
+// ── Tile URLs ────────────────────────────────────────────────────────────────
 
-const TILE_URL =
-  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+const TILE_URLS: Record<MapTheme, string> = {
+  dark: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+  light: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+};
+
+const BG_COLORS: Record<MapTheme, string> = {
+  dark: "#1a1a2e",
+  light: "#f5f0e6",
+};
+
 const TILE_ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>';
 
@@ -57,6 +64,7 @@ interface WorldMapProps {
 
 export function WorldMap({ languages }: WorldMapProps) {
   const [mode, setMode] = useState<MapVisualizationMode>("markers");
+  const [theme, setTheme] = useState<MapTheme>("dark");
 
   const heatmapPoints = useMemo(
     () => toHeatmapPoints(languages),
@@ -78,26 +86,58 @@ export function WorldMap({ languages }: WorldMapProps) {
         maxBounds={MAX_BOUNDS}
         maxBoundsViscosity={1.0}
         preferCanvas
-        style={{ height: "100%", width: "100%", background: "#1a1a2e" }}
+        style={{ height: "100%", width: "100%", background: BG_COLORS[theme] }}
         zoomControl={false}
       >
-        <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
-        <ZoomControl position="topleft" />
+        <TileLayer
+          key={theme}
+          url={TILE_URLS[theme]}
+          attribution={TILE_ATTRIBUTION}
+        />
+        <MapThemeUpdater theme={theme} />
         <MapResizer />
         <RegionFlyTo languages={languages} />
 
-        {mode === "markers" && <MapMarkers languages={languages} />}
+        {mode === "markers" && (
+          <MapMarkers languages={languages} theme={theme} />
+        )}
         {mode === "heatmap" && <HeatmapLayer points={heatmapPoints} />}
         {mode === "choropleth" && (
           <ChoroplethLayer countryStats={countryStats} />
         )}
       </MapContainer>
 
-      {/* Overlays */}
-      <MapVisualizationToggle mode={mode} onChange={setMode} />
-      <MapLegend mode={mode} />
+      {/* Controls */}
+      <MapControls
+        mode={mode}
+        onModeChange={setMode}
+        theme={theme}
+        onThemeChange={setTheme}
+      />
     </div>
   );
+}
+
+// ── Theme updater (syncs background color on theme change) ──────────────────
+
+function MapThemeUpdater({ theme }: { theme: MapTheme }) {
+  const map = useMap();
+  useEffect(() => {
+    const container = map.getContainer();
+    container.style.background = BG_COLORS[theme];
+
+    // Warm-tint the light tiles to match the cream/parchment palette
+    const tilePane = container.querySelector(
+      ".leaflet-tile-pane"
+    ) as HTMLElement | null;
+    if (tilePane) {
+      tilePane.style.filter =
+        theme === "light"
+          ? "sepia(0.18) saturate(0.85) brightness(1.03) hue-rotate(-3deg)"
+          : "none";
+    }
+  }, [map, theme]);
+  return null;
 }
 
 // ── Resizer (invalidateSize on mount) ────────────────────────────────────────
@@ -116,7 +156,13 @@ function MapResizer() {
 // Longitude offsets so dots appear on wrapped copies of the world
 const WORLD_OFFSETS = [0, -360, 360];
 
-function MapMarkers({ languages }: { languages: LanguageEntry[] }) {
+function MapMarkers({
+  languages,
+  theme,
+}: {
+  languages: LanguageEntry[];
+  theme: MapTheme;
+}) {
   return (
     <>
       {languages.map((lang) => {
@@ -129,10 +175,10 @@ function MapMarkers({ languages }: { languages: LanguageEntry[] }) {
             center={[lang.latitude, lang.longitude + offset]}
             radius={4}
             pathOptions={{
-              color: color,
+              color: theme === "light" ? "#00000020" : color,
               fillColor: color,
-              fillOpacity: 0.8,
-              weight: 1,
+              fillOpacity: theme === "light" ? 0.9 : 0.8,
+              weight: theme === "light" ? 1.5 : 1,
               opacity: 0.9,
             }}
           >

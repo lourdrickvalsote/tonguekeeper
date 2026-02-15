@@ -365,6 +365,7 @@ export const MACROAREAS = [
 // ── Map Visualization ─────────────────────────────────────────────────────────
 
 export type MapVisualizationMode = "markers" | "heatmap" | "choropleth";
+export type MapTheme = "dark" | "light";
 
 export interface CountryLanguageStats {
   country_code: string;

@@ -32,6 +32,7 @@ const SORT_OPTIONS = [
   { value: "endangerment_desc", label: "Most Endangered" },
   { value: "speakers_asc", label: "Fewest Speakers" },
   { value: "speakers_desc", label: "Most Speakers" },
+  { value: "country_asc", label: "Country (A \u2192 Z)" },
   { value: "preservation_desc", label: "Most Preserved" },
 ];
 
@@ -307,7 +308,7 @@ export function FilterBar({
         )}
 
         {/* Results count */}
-        <span className="text-xs text-muted-foreground/70 font-mono tabular-nums shrink-0 ml-auto">
+        <span className="text-[11px] text-muted-foreground/50 font-mono tabular-nums shrink-0 ml-auto">
           {totalResults === totalLanguages
             ? `${totalLanguages.toLocaleString()} languages`
             : `${totalResults.toLocaleString()} of ${totalLanguages.toLocaleString()}`}

@@ -19,6 +19,7 @@
     "prescan": "tsx scripts/prescan-languages.ts",
     "generate:map": "tsx scripts/generate-map-data.ts",
     "generate:countries": "tsx scripts/generate-countries-geojson.ts",
+    "enrich:speakers": "tsx scripts/enrich-speaker-counts.ts",
     "setup:data": "npm run ingest:glottolog && npm run generate:map && npm run prescan",
     "dev:all": "concurrently -n next,ws,ml -c blue,green,magenta \"npm run dev\" \"npm run server\" \"npm run ml\""
   },

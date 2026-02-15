@@ -1,7 +1,6 @@
 "use client";
 
 import { LanguageBrowserStats as Stats } from "@/lib/types";
-import { AlertTriangle, Skull, Shield, Globe } from "lucide-react";
 
 interface LanguageBrowserStatsProps {
   stats: Stats;
@@ -11,56 +10,61 @@ const STAT_ITEMS = [
   {
     key: "total_endangered" as const,
     label: "Endangered",
-    icon: Globe,
     color: "#F97316",
+    suffix: "+",
   },
   {
     key: "critically_endangered" as const,
     label: "Critical",
-    icon: AlertTriangle,
     color: "#DC2626",
+    suffix: "",
   },
   {
     key: "extinct" as const,
     label: "Extinct",
-    icon: Skull,
     color: "#6B7280",
+    suffix: "",
   },
   {
     key: "with_preservation_data" as const,
     label: "Preserved",
-    icon: Shield,
     color: "#047857",
+    suffix: "",
   },
 ];
 
 export function LanguageBrowserStats({ stats }: LanguageBrowserStatsProps) {
   return (
-    <div className="flex items-center gap-1 font-mono">
-      {STAT_ITEMS.map((item) => (
-        <div
-          key={item.key}
-          className="flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1 transition-colors hover:bg-secondary/60"
-        >
-          <div
-            className="flex h-5 w-5 items-center justify-center rounded"
-            style={{ backgroundColor: `${item.color}0C` }}
-          >
-            <item.icon
-              className="h-3 w-3"
-              style={{ color: item.color }}
-            />
-          </div>
-          <div className="flex flex-col">
-            <p className="text-[11px] font-bold tabular-nums leading-none">
+    <div className="border-b border-border/30 bg-muted/5 px-5 py-3">
+      {/* Editorial divider label */}
+      <div className="flex items-center gap-4 mb-3">
+        <div className="flex-1 h-px bg-border/30" />
+        <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/40 shrink-0 select-none">
+          Endangered languages at a glance
+        </p>
+        <div className="flex-1 h-px bg-border/30" />
+      </div>
+
+      {/* Stats grid */}
+      <div className="grid grid-cols-4 gap-6">
+        {STAT_ITEMS.map((item) => (
+          <div key={item.key} className="flex flex-col items-center gap-1.5">
+            <span className="font-serif text-2xl tabular-nums text-foreground">
               {stats[item.key].toLocaleString()}
-            </p>
-            <p className="text-[8px] uppercase tracking-wider text-muted-foreground/70">
-              {item.label}
-            </p>
+              {item.suffix}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span
+                className="h-1.5 w-1.5 rounded-full shrink-0"
+                style={{ backgroundColor: item.color }}
+              />
+              <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/50">
+                {item.label}
+              </span>
+            </span>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }

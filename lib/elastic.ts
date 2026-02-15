@@ -1702,6 +1702,7 @@ const SORT_MAP: Record<string, Record<string, unknown>> = {
   endangerment_desc: { endangerment_level: { order: "desc" } },
   speakers_asc: { speaker_count: { order: "asc", missing: "_last" } },
   speakers_desc: { speaker_count: { order: "desc", missing: "_last" } },
+  country_asc: { countries: { order: "asc", missing: "_last" } },
 };
 
 export async function searchLanguages(
@@ -1723,7 +1724,7 @@ export async function searchLanguages(
           {
             multi_match: {
               query: filters.search,
-              fields: ["name^3", "name.keyword^4", "alternate_names^2", "iso_code^3", "glottocode^3", "language_family"],
+              fields: ["name^3", "name.keyword^4", "alternate_names^2", "iso_code^3", "glottocode^3", "language_family", "countries"],
               type: "best_fields",
               fuzziness: "AUTO",
             },

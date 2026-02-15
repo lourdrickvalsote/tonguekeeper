@@ -13,6 +13,7 @@ import {
   DialogContent,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
 const TILE_URL =
   "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
@@ -22,6 +23,7 @@ interface MiniMapProps {
   longitude: number;
   color: string;
   languageName?: string;
+  className?: string;
 }
 
 function MapSetup() {
@@ -81,12 +83,12 @@ function MapContent({
   );
 }
 
-export function MiniMap({ latitude, longitude, color, languageName }: MiniMapProps) {
+export function MiniMap({ latitude, longitude, color, languageName, className }: MiniMapProps) {
   const [open, setOpen] = useState(false);
 
   return (
     <>
-      <div className="h-40 w-56 rounded-lg overflow-hidden border border-border/30 relative z-10 group">
+      <div className={cn("rounded-lg overflow-hidden border border-border/30 relative z-10 group", className || "h-40 w-56")}>
         <MapContainer
           center={[latitude, longitude]}
           zoom={4}

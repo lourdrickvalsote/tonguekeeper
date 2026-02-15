@@ -22,7 +22,7 @@ import { DistinctiveVocabulary } from "@/components/insights/DistinctiveVocabula
 import { SourcesList } from "./SourcesList";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/utils/errors";
-import { Languages, BookOpen, Network, Activity, Layers, Loader2, BookText, MessageSquare, ExternalLink } from "lucide-react";
+import { Languages, BookOpen, Network, Activity, Layers, Loader2, BookText, MessageSquare, ExternalLink, LayoutDashboard } from "lucide-react";
 import { AgentChat } from "@/components/agent-builder/AgentChat";
 import Link from "next/link";
 
@@ -32,9 +32,10 @@ interface SearchPanelProps {
   language?: LanguageEntry;
   showHealthTab?: boolean;
   embedded?: boolean;
+  onNavigateToDashboard?: () => void;
 }
 
-export function SearchPanel({ language, showHealthTab = true, embedded = false }: SearchPanelProps) {
+export function SearchPanel({ language, showHealthTab = true, embedded = false, onNavigateToDashboard }: SearchPanelProps) {
   const { pipelineStatus, stats } = useAgentEventsContext();
 
   // ── Shared state ──────────────────────────────────────────────────────
@@ -332,13 +333,23 @@ export function SearchPanel({ language, showHealthTab = true, embedded = false }
             )}
           </div>
           {language && (
-            <Link
-              href={`/languages/${language.glottocode}`}
-              className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
-            >
-              View page
-              <ExternalLink className="h-3 w-3" />
-            </Link>
+            embedded ? (
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <LayoutDashboard className="h-3 w-3" />
+                Go to Dashboard
+              </Link>
+            ) : (
+              <Link
+                href={`/languages/${language.glottocode}`}
+                className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+              >
+                View page
+                <ExternalLink className="h-3 w-3" />
+              </Link>
+            )
           )}
         </div>
       </div>

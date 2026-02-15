@@ -3,37 +3,27 @@
 import { useEffect, useState, useRef } from "react";
 import {
   ChevronDown,
-  Globe,
   BookOpen,
   Users,
   ExternalLink,
   Sparkles,
   Languages,
-  Pen,
-  Type,
-  Layers,
-  Search,
   Loader2,
   Check,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 import { fetchLanguageOverview } from "@/lib/api";
 import type { LanguageEntry, LanguageOverview, ExternalLinkType } from "@/lib/types";
 
-// ── Link type config ────────────────────────────────────────────────────────
+// ── Link type labels ────────────────────────────────────────────────────────
 
-const LINK_TYPE_META: Record<
-  ExternalLinkType,
-  { label: string; color: string }
-> = {
-  wikipedia: { label: "Wikipedia", color: "#636363" },
-  glottolog: { label: "Glottolog", color: "#1E40AF" },
-  elp: { label: "ELP", color: "#047857" },
-  elar: { label: "ELAR", color: "#6D28D9" },
-  ethnologue: { label: "Ethnologue", color: "#B45309" },
-  other: { label: "Resource", color: "#78716C" },
+const LINK_TYPE_LABELS: Record<ExternalLinkType, string> = {
+  wikipedia: "Wiki",
+  glottolog: "Glottolog",
+  elp: "ELP",
+  elar: "ELAR",
+  ethnologue: "Ethno.",
+  other: "Resource",
 };
 
 // ── Loading steps ───────────────────────────────────────────────────────────
@@ -57,7 +47,6 @@ function OverviewLoading({ languageName }: { languageName: string }) {
     return () => clearInterval(interval);
   }, []);
 
-  // Find current step based on elapsed seconds
   const currentStepIndex = LOADING_STEPS.reduce(
     (acc, step, i) => (elapsed >= step.threshold ? i : acc),
     0
@@ -65,18 +54,12 @@ function OverviewLoading({ languageName }: { languageName: string }) {
 
   return (
     <div className="px-5 py-4">
-      {/* Real section header */}
+      {/* Section header */}
       <div className="flex items-center gap-2 mb-4">
         <Sparkles className="h-3.5 w-3.5 text-primary/60" />
         <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
           About {languageName}
         </span>
-        <Badge
-          variant="secondary"
-          className="px-1.5 py-0 text-[9px] text-muted-foreground/50"
-        >
-          AI
-        </Badge>
       </div>
 
       {/* Progress steps */}
@@ -99,9 +82,7 @@ function OverviewLoading({ languageName }: { languageName: string }) {
               <div
                 key={step.label}
                 className={`flex items-center gap-2 text-xs transition-opacity duration-300 ${
-                  isDone || isCurrent
-                    ? "opacity-100"
-                    : "opacity-30"
+                  isDone || isCurrent ? "opacity-100" : "opacity-30"
                 }`}
               >
                 {isDone ? (
@@ -128,63 +109,32 @@ function OverviewLoading({ languageName }: { languageName: string }) {
         </div>
       </div>
 
-      {/* Card skeleton with real headers */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <Card className="gap-0 border-border/50 bg-card/80 p-0">
-          <CardContent className="px-4 py-3">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="flex h-5 w-5 items-center justify-center rounded bg-blue-500/10">
-                <Languages className="h-3 w-3 text-blue-600" />
+      {/* Column skeleton */}
+      <div className="grid grid-cols-1 divide-y divide-border/30 md:grid-cols-3 md:divide-y-0 md:divide-x md:divide-border/30">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className={`py-4 md:py-0 ${
+              i === 0 ? "md:pr-5" : i === 1 ? "md:px-5" : "md:pl-5"
+            }`}
+          >
+            <Skeleton className="h-4 w-28 mb-3" />
+            <div className="space-y-3">
+              <div>
+                <Skeleton className="h-2.5 w-16 mb-1" />
+                <Skeleton className="h-3.5 w-full" />
               </div>
-              <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                Linguistic Features
-              </span>
-            </div>
-            <div className="space-y-2">
-              <Skeleton className="h-3 w-full" />
-              <Skeleton className="h-3 w-4/5" />
-              <Skeleton className="h-3 w-3/4" />
-              <Skeleton className="h-3 w-full" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="gap-0 border-border/50 bg-card/80 p-0">
-          <CardContent className="px-4 py-3">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="flex h-5 w-5 items-center justify-center rounded bg-emerald-500/10">
-                <Users className="h-3 w-3 text-emerald-600" />
+              <div>
+                <Skeleton className="h-2.5 w-20 mb-1" />
+                <Skeleton className="h-3.5 w-4/5" />
               </div>
-              <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                Speaker Demographics
-              </span>
-            </div>
-            <div className="space-y-2">
-              <Skeleton className="h-3 w-full" />
-              <Skeleton className="h-3 w-3/5" />
-              <Skeleton className="h-3 w-4/5" />
-              <Skeleton className="h-3 w-2/3" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="gap-0 border-border/50 bg-card/80 p-0">
-          <CardContent className="px-4 py-3">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="flex h-5 w-5 items-center justify-center rounded bg-amber-500/10">
-                <BookOpen className="h-3 w-3 text-amber-600" />
+              <div>
+                <Skeleton className="h-2.5 w-14 mb-1" />
+                <Skeleton className="h-3.5 w-3/4" />
               </div>
-              <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                References
-              </span>
             </div>
-            <div className="space-y-2">
-              <Skeleton className="h-3 w-full" />
-              <Skeleton className="h-3 w-4/5" />
-              <Skeleton className="h-3 w-3/4" />
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -192,25 +142,16 @@ function OverviewLoading({ languageName }: { languageName: string }) {
 
 // ── Feature row helper ──────────────────────────────────────────────────────
 
-function FeatureRow({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value?: string;
-}) {
+function FeatureRow({ label, value }: { label: string; value?: string }) {
   if (!value) return null;
   return (
-    <div className="flex items-start gap-2 py-1.5">
-      <Icon className="h-3.5 w-3.5 mt-0.5 shrink-0 text-muted-foreground/60" />
-      <div className="min-w-0">
-        <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60">
-          {label}
-        </p>
-        <p className="text-xs text-foreground/80 leading-relaxed">{value}</p>
-      </div>
+    <div className="py-1.5">
+      <dt className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/50">
+        {label}
+      </dt>
+      <dd className="mt-0.5 text-[13px] leading-relaxed text-foreground/80">
+        {value}
+      </dd>
     </div>
   );
 }
@@ -229,6 +170,8 @@ export function LanguageOverviewSection({
   const [overview, setOverview] = useState<LanguageOverview | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [summaryExpanded, setSummaryExpanded] = useState(false);
+  const [featuresExpanded, setFeaturesExpanded] = useState(false);
 
   useEffect(() => {
     setIsLoading(true);
@@ -255,12 +198,6 @@ export function LanguageOverviewSection({
             <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground group-hover:text-foreground transition-colors">
               About {language.name}
             </span>
-            <Badge
-              variant="secondary"
-              className="px-1.5 py-0 text-[9px] text-muted-foreground/50"
-            >
-              AI
-            </Badge>
             <ChevronDown
               className={`ml-auto h-3.5 w-3.5 text-muted-foreground/40 transition-transform duration-200 ${
                 isCollapsed ? "" : "rotate-180"
@@ -271,155 +208,156 @@ export function LanguageOverviewSection({
           {!isCollapsed && (
             <div className="mt-3">
               {/* Summary */}
-              <div className="text-sm leading-relaxed text-foreground/80 space-y-2 mb-5">
-                {overview.summary.split("\n\n").map((paragraph, i) => (
-                  <p key={i}>{paragraph}</p>
-                ))}
-              </div>
+              {(() => {
+                const paragraphs = overview.summary.split("\n\n");
+                return (
+                  <div className="text-sm leading-relaxed text-foreground/80 space-y-2 mb-5">
+                    <p>{paragraphs[0]}</p>
+                    {paragraphs.length > 1 && !summaryExpanded && (
+                      <button
+                        onClick={() => setSummaryExpanded(true)}
+                        className="text-xs text-primary hover:text-primary/80 transition-colors cursor-pointer"
+                      >
+                        Read more
+                      </button>
+                    )}
+                    {summaryExpanded &&
+                      paragraphs.slice(1).map((p, i) => <p key={i}>{p}</p>)}
+                  </div>
+                );
+              })()}
 
-              {/* Info cards grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {/* Info columns — editorial layout with vertical hairlines */}
+              <div className="grid grid-cols-1 divide-y divide-border/30 md:grid-cols-3 md:divide-y-0 md:divide-x md:divide-border/30">
                 {/* Linguistic Features */}
-                <Card className="gap-0 border-border/50 bg-card/80 p-0">
-                  <CardContent className="px-4 py-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="flex h-5 w-5 items-center justify-center rounded bg-blue-500/10">
-                        <Languages className="h-3 w-3 text-blue-600" />
-                      </div>
-                      <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                        Linguistic Features
-                      </span>
-                    </div>
-                    <div className="space-y-0.5">
-                      <FeatureRow
-                        icon={Pen}
-                        label="Writing System"
-                        value={overview.linguistic_features.writing_system}
-                      />
-                      <FeatureRow
-                        icon={Type}
-                        label="Phonology"
-                        value={overview.linguistic_features.phonology}
-                      />
-                      <FeatureRow
-                        icon={Layers}
-                        label="Word Order"
-                        value={overview.linguistic_features.word_order}
-                      />
-                      <FeatureRow
-                        icon={Layers}
-                        label="Morphology"
-                        value={overview.linguistic_features.morphological_type}
-                      />
-                      {overview.linguistic_features.notable_features?.length ? (
-                        <div className="pt-1.5 mt-1.5 border-t border-border/30">
-                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 mb-1">
-                            Notable Features
-                          </p>
-                          <ul className="space-y-0.5">
-                            {overview.linguistic_features.notable_features.map(
-                              (f, i) => (
-                                <li
-                                  key={i}
-                                  className="text-xs leading-relaxed text-foreground/80"
-                                >
-                                  <span className="text-muted-foreground/40 mr-1.5">·</span>
-                                  {f}
-                                </li>
-                              )
-                            )}
+                <div className="py-4 md:py-0 md:pr-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Languages className="h-3.5 w-3.5 text-primary/60" />
+                    <h3 className="font-serif text-sm tracking-tight text-foreground">
+                      Linguistic Features
+                    </h3>
+                  </div>
+                  <dl className="space-y-0">
+                    <FeatureRow
+                      label="Writing System"
+                      value={overview.linguistic_features.writing_system}
+                    />
+                    <FeatureRow
+                      label="Phonology"
+                      value={overview.linguistic_features.phonology}
+                    />
+                    <FeatureRow
+                      label="Word Order"
+                      value={overview.linguistic_features.word_order}
+                    />
+                    <FeatureRow
+                      label="Morphology"
+                      value={overview.linguistic_features.morphological_type}
+                    />
+                  </dl>
+                  {(() => {
+                    const features = overview.linguistic_features.notable_features ?? [];
+                    if (features.length === 0) return null;
+                    const visible = featuresExpanded ? features : features.slice(0, 3);
+                    const hiddenCount = features.length - 3;
+                    return (
+                      <div className="mt-3 pt-3 border-t border-border/20">
+                        <dt className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/50 mb-1.5">
+                          Notable Features
+                        </dt>
+                        <dd>
+                          <ul className="space-y-1">
+                            {visible.map((f, i) => (
+                              <li
+                                key={i}
+                                className="text-[13px] leading-relaxed text-foreground/80 pl-3 relative"
+                              >
+                                <span className="absolute left-0 top-[0.55em] h-1 w-1 rounded-full bg-border" />
+                                {f}
+                              </li>
+                            ))}
                           </ul>
-                        </div>
-                      ) : null}
-                    </div>
-                  </CardContent>
-                </Card>
+                          {features.length > 3 && (
+                            <button
+                              onClick={() => setFeaturesExpanded(!featuresExpanded)}
+                              className="text-xs text-primary hover:text-primary/80 transition-colors mt-1.5 cursor-pointer"
+                            >
+                              {featuresExpanded ? "Show less" : `Show ${hiddenCount} more`}
+                            </button>
+                          )}
+                        </dd>
+                      </div>
+                    );
+                  })()}
+                </div>
 
                 {/* Speaker Demographics */}
-                <Card className="gap-0 border-border/50 bg-card/80 p-0">
-                  <CardContent className="px-4 py-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="flex h-5 w-5 items-center justify-center rounded bg-emerald-500/10">
-                        <Users className="h-3 w-3 text-emerald-600" />
-                      </div>
-                      <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                        Speaker Demographics
-                      </span>
-                    </div>
-                    <div className="space-y-0.5">
-                      <FeatureRow
-                        icon={Users}
-                        label="Speakers"
-                        value={overview.demographics.speaker_count_detail}
-                      />
-                      <FeatureRow
-                        icon={Users}
-                        label="Age Distribution"
-                        value={overview.demographics.age_distribution}
-                      />
-                      <FeatureRow
-                        icon={Globe}
-                        label="Geography"
-                        value={overview.demographics.geographic_distribution}
-                      />
-                      <FeatureRow
-                        icon={Sparkles}
-                        label="Revitalization"
-                        value={overview.demographics.revitalization_efforts}
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
+                <div className="py-4 md:py-0 md:px-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Users className="h-3.5 w-3.5 text-primary/60" />
+                    <h3 className="font-serif text-sm tracking-tight text-foreground">
+                      Speaker Demographics
+                    </h3>
+                  </div>
+                  <dl className="space-y-0">
+                    <FeatureRow
+                      label="Speakers"
+                      value={overview.demographics.speaker_count_detail}
+                    />
+                    <FeatureRow
+                      label="Age Distribution"
+                      value={overview.demographics.age_distribution}
+                    />
+                    <FeatureRow
+                      label="Geography"
+                      value={overview.demographics.geographic_distribution}
+                    />
+                    <FeatureRow
+                      label="Revitalization"
+                      value={overview.demographics.revitalization_efforts}
+                    />
+                  </dl>
+                </div>
 
-                {/* External Links */}
-                <Card className="gap-0 border-border/50 bg-card/80 p-0">
-                  <CardContent className="px-4 py-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="flex h-5 w-5 items-center justify-center rounded bg-amber-500/10">
-                        <BookOpen className="h-3 w-3 text-amber-600" />
-                      </div>
-                      <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                        References
-                      </span>
+                {/* References */}
+                <div className="py-4 md:py-0 md:pl-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <BookOpen className="h-3.5 w-3.5 text-primary/60" />
+                    <h3 className="font-serif text-sm tracking-tight text-foreground">
+                      References
+                    </h3>
+                  </div>
+                  {overview.external_links.length > 0 ? (
+                    <div className="space-y-0">
+                      {overview.external_links.map((link, i) => {
+                        const label =
+                          LINK_TYPE_LABELS[link.type] ||
+                          LINK_TYPE_LABELS.other;
+                        return (
+                          <a
+                            key={i}
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group flex items-baseline gap-2 py-1.5 text-[13px] transition-colors"
+                          >
+                            <span className="shrink-0 text-[10px] uppercase tracking-[0.12em] text-accent-foreground/60 w-16">
+                              {label}
+                            </span>
+                            <span className="text-foreground/70 group-hover:text-primary transition-colors truncate">
+                              {link.title}
+                            </span>
+                            <ExternalLink className="h-3 w-3 shrink-0 text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </a>
+                        );
+                      })}
                     </div>
-                    <div className="space-y-1">
-                      {overview.external_links.length > 0 ? (
-                        overview.external_links.map((link, i) => {
-                          const meta =
-                            LINK_TYPE_META[link.type] || LINK_TYPE_META.other;
-                          return (
-                            <a
-                              key={i}
-                              href={link.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-2 rounded-md p-1.5 text-xs transition-colors hover:bg-secondary/50 group"
-                            >
-                              <Badge
-                                variant="outline"
-                                className="shrink-0 border-0 px-1.5 py-0 text-[9px] font-medium"
-                                style={{
-                                  backgroundColor: `${meta.color}10`,
-                                  color: meta.color,
-                                }}
-                              >
-                                {meta.label}
-                              </Badge>
-                              <span className="truncate text-muted-foreground group-hover:text-foreground transition-colors">
-                                {link.title}
-                              </span>
-                              <ExternalLink className="h-3 w-3 shrink-0 text-muted-foreground/40" />
-                            </a>
-                          );
-                        })
-                      ) : (
-                        <p className="text-xs text-muted-foreground/50 py-2">
-                          No reference links available
-                        </p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                  ) : (
+                    <p className="text-[13px] text-muted-foreground/40 italic">
+                      No reference links available
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           )}

@@ -14,18 +14,20 @@ import { useActiveLanguage } from "@/lib/active-language";
 import type { LanguageMetadata } from "@/lib/types";
 import { SearchPanel } from "@/components/search/search-panel";
 import { RunHistory } from "@/components/pipeline/RunHistory";
-import { StatsBar } from "@/components/dashboard/stats-bar";
 import { EndangermentBadge } from "@/components/languages/EndangermentBadge";
+import { fetchStats } from "@/lib/api";
+import type { LanguageStats } from "@/lib/types";
+import { MOCK_STATS } from "@/lib/mock-events";
 import { LanguageOverviewSection } from "@/components/languages/LanguageOverview";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   ArrowLeft,
-  MapPin,
   Users,
   Globe,
   Zap,
   AlertCircle,
   BookOpen,
+  LayoutDashboard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -36,7 +38,7 @@ const MiniMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="h-32 w-48 rounded-lg bg-[#1a1a2e] border border-border/30 flex items-center justify-center">
+      <div className="h-48 w-72 rounded-xl bg-[#1a1a2e] border border-border/30 flex items-center justify-center">
         <Globe className="h-5 w-5 text-white/20 animate-pulse" />
       </div>
     ),
@@ -159,19 +161,64 @@ function buildMetadata(lang: LanguageEntry): LanguageMetadata {
   };
 }
 
+const STAT_ITEMS: {
+  key: keyof LanguageStats;
+  label: string;
+  format?: (v: number) => string;
+}[] = [
+  { key: "total_entries", label: "Entries" },
+  { key: "total_sources", label: "Sources" },
+  { key: "total_audio_clips", label: "Audio" },
+  { key: "grammar_patterns", label: "Grammar" },
+  { key: "coverage_percentage", label: "Coverage", format: (v) => `${v}%` },
+];
+
 function LanguageHeader({ language }: { language: LanguageEntry }) {
   const router = useRouter();
-  const { startPipeline, pipelineStatus } = useAgentEventsContext();
-  const hasData = language.preservation_status.vocabulary_entries > 0;
+  const { startPipeline, pipelineStatus, stats: liveStats } = useAgentEventsContext();
+  const color = ENDANGERMENT_COLORS[language.endangerment_status];
+
+  // Stats data
+  const [stats, setStats] = useState<LanguageStats>(MOCK_STATS);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchStats(language.iso_code).then((data) => {
+      if (!cancelled) setStats(data);
+    });
+    const interval = setInterval(() => {
+      fetchStats(language.iso_code).then((data) => {
+        if (!cancelled) setStats(data);
+      });
+    }, 30_000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [language.iso_code]);
+
+  useEffect(() => {
+    if (pipelineStatus === "complete" || pipelineStatus === "error") {
+      const timer = setTimeout(() => {
+        fetchStats(language.iso_code).then(setStats);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [pipelineStatus, language.iso_code]);
+
+  const isLive = pipelineStatus === "running";
 
   const handlePreservation = useCallback(() => {
     startPipeline(buildMetadata(language));
   }, [startPipeline, language]);
 
   return (
-    <header className="shrink-0 border-b border-border/60 bg-background/80 backdrop-blur-sm">
-      {/* Top bar with back + stats */}
-      <div className="flex items-center justify-between px-5 py-2">
+    <header className="shrink-0 bg-background/80 backdrop-blur-sm">
+      {/* Endangerment accent line */}
+      <div className="h-0.5" style={{ backgroundColor: color }} />
+
+      {/* Back nav */}
+      <div className="px-6 py-2">
         <button
           onClick={() => router.push("/languages")}
           className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
@@ -179,80 +226,93 @@ function LanguageHeader({ language }: { language: LanguageEntry }) {
           <ArrowLeft className="h-3.5 w-3.5" />
           Languages
         </button>
-        <StatsBar languageCode={language.iso_code} />
       </div>
 
-      {/* Language info + mini map */}
-      <div className="flex items-start justify-between gap-6 px-5 pb-4">
-        {/* Left: metadata */}
-        <div className="flex flex-col gap-2 min-w-0">
-          {/* Name + badge + preservation button */}
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="font-serif text-xl tracking-tight text-foreground">
-              {language.name}
-            </h1>
+      {/* Hero: metadata + map */}
+      <div className="flex items-start justify-between gap-8 px-6 pb-6">
+        {/* Left: language profile */}
+        <div className="flex flex-col min-w-0">
+          <h1 className="font-serif text-4xl tracking-tight text-foreground">
+            {language.name}
+          </h1>
+
+          {/* Badge + codes */}
+          <div className="mt-3 flex items-center gap-3 flex-wrap">
             <EndangermentBadge status={language.endangerment_status} />
-            {hasData && (
-              <Button
-                size="sm"
-                variant={pipelineStatus === "running" ? "outline" : "default"}
-                onClick={handlePreservation}
-                disabled={pipelineStatus === "running" || pipelineStatus === "complete"}
-                className="h-7 gap-1.5 text-xs"
-              >
-                {pipelineStatus === "running" ? (
-                  <>
-                    <Zap className="h-3 w-3 animate-pulse" />
-                    Preserving...
-                  </>
-                ) : pipelineStatus === "complete" ? (
-                  <>
-                    <BookOpen className="h-3 w-3" />
-                    Preserved
-                  </>
-                ) : (
-                  <>
-                    <Zap className="h-3 w-3" />
-                    Run Preservation
-                  </>
-                )}
-              </Button>
-            )}
+            <span className="text-border/50">|</span>
+            <span className="text-xs text-muted-foreground font-mono">
+              {language.iso_code} · {language.glottocode}
+            </span>
+            <span className="text-border/50">|</span>
+            <span className="text-xs text-muted-foreground">
+              {language.language_family} · {language.macroarea}
+            </span>
           </div>
 
-          {/* Codes row */}
-          <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
-            <span>{language.iso_code}</span>
-            <span className="text-border">·</span>
-            <span>{language.glottocode}</span>
-            <span className="text-border">·</span>
-            <span className="font-sans">{language.language_family}</span>
-            <span className="text-border">·</span>
-            <span className="font-sans">{language.macroarea}</span>
-          </div>
-
-          {/* Stats row */}
-          <div className="flex items-center gap-4 text-xs text-muted-foreground mt-0.5">
+          {/* Speakers + countries */}
+          <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <Users className="h-3.5 w-3.5" />
               {formatSpeakers(language.speaker_count)}
             </span>
-
             {language.countries?.length > 0 && (
-              <span className="flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5" />
+              <>
+                <span className="text-border">·</span>
                 <span title={language.countries.join(", ")}>
                   {language.countries.map(countryToFlag).join(" ")}
                 </span>
-              </span>
+              </>
             )}
+          </div>
 
-            {language.preservation_status.vocabulary_entries > 0 && (
-              <span className="flex items-center gap-1.5 text-emerald-700">
-                <BookOpen className="h-3.5 w-3.5" />
-                {language.preservation_status.vocabulary_entries.toLocaleString()} entries
-              </span>
-            )}
+          {/* Inline stats row */}
+          <div className="mt-5 flex items-baseline gap-8">
+            {STAT_ITEMS.map((item) => {
+              let value = stats[item.key] as number;
+              if (isLive && item.key === "total_entries") value += liveStats.vocabulary;
+              if (isLive && item.key === "total_sources") value += liveStats.sources;
+              if (isLive && item.key === "total_audio_clips") value += liveStats.audioClips;
+              const display = item.format ? item.format(value) : value.toLocaleString();
+
+              return (
+                <div key={item.key} className="flex flex-col">
+                  <span className="font-serif text-2xl text-foreground tabular-nums">
+                    {display}
+                  </span>
+                  <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/50 mt-0.5">
+                    {item.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* CTA */}
+          <div className="mt-5">
+            <Button
+              size="sm"
+              variant={pipelineStatus === "running" ? "outline" : "default"}
+              onClick={handlePreservation}
+              disabled={pipelineStatus === "running" || pipelineStatus === "complete"}
+              className="h-8 gap-1.5 text-xs"
+            >
+              {pipelineStatus === "running" ? (
+                <>
+                  <Zap className="h-3 w-3 animate-pulse" />
+                  Preserving...
+                </>
+              ) : pipelineStatus === "complete" ? (
+                <>
+                  <BookOpen className="h-3 w-3" />
+                  Preserved
+                </>
+              ) : (
+                <>
+                  <Zap className="h-3 w-3" />
+                  Run Preservation
+                </>
+              )}
+            </Button>
           </div>
         </div>
 
@@ -264,10 +324,14 @@ function LanguageHeader({ language }: { language: LanguageEntry }) {
               longitude={language.longitude}
               color={ENDANGERMENT_COLORS[language.endangerment_status]}
               languageName={language.name}
+              className="h-48 w-72"
             />
           </div>
         )}
       </div>
+
+      {/* Bottom border */}
+      <div className="h-px bg-border/30" />
     </header>
   );
 }
@@ -299,6 +363,11 @@ function EmptyState({ language }: { language: LanguageEntry }) {
     router.push("/dashboard");
   }, [language, router, setActiveLanguage]);
 
+  const handleGoToDashboard = useCallback(() => {
+    setActiveLanguage(language);
+    router.push("/dashboard");
+  }, [language, router, setActiveLanguage]);
+
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
       <div className="flex flex-col items-center gap-4 max-w-md">
@@ -320,13 +389,23 @@ function EmptyState({ language }: { language: LanguageEntry }) {
         </div>
 
         {/* CTA */}
-        <Button
-          onClick={handlePreservation}
-          className="mt-2 gap-2"
-        >
-          <Zap className="h-4 w-4" />
-          Begin Preservation
-        </Button>
+        <div className="mt-2 flex items-center gap-3">
+          <Button
+            onClick={handlePreservation}
+            className="gap-2"
+          >
+            <Zap className="h-4 w-4" />
+            Begin Preservation
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleGoToDashboard}
+            className="gap-2"
+          >
+            <LayoutDashboard className="h-4 w-4" />
+            Go to Dashboard
+          </Button>
+        </div>
 
         {/* Subtext */}
         <p className="text-xs text-muted-foreground/60 max-w-sm">
@@ -374,23 +453,32 @@ function DetailSkeleton() {
   return (
     <div className="flex h-full flex-col overflow-hidden bg-background">
       {/* Header skeleton */}
-      <header className="shrink-0 border-b border-border/60 px-5">
-        <div className="flex items-center justify-between py-2">
+      <header className="shrink-0 px-6">
+        <div className="h-0.5 bg-muted/30 -mx-6" />
+        <div className="py-2">
           <Skeleton className="h-4 w-20" />
-          <div className="flex gap-2">
-            <Skeleton className="h-5 w-16" />
-            <Skeleton className="h-5 w-16" />
-            <Skeleton className="h-5 w-16" />
-          </div>
         </div>
-        <div className="flex items-start justify-between gap-6 pb-4">
-          <div className="flex flex-col gap-2">
-            <Skeleton className="h-7 w-48" />
-            <Skeleton className="h-4 w-64" />
-            <Skeleton className="h-4 w-40" />
+        <div className="flex items-start justify-between gap-8 pb-6">
+          <div className="flex flex-col gap-2 flex-1">
+            <Skeleton className="h-10 w-56" />
+            <div className="flex gap-3 items-center mt-1">
+              <Skeleton className="h-5 w-36 rounded-full" />
+              <Skeleton className="h-3 w-32" />
+            </div>
+            <Skeleton className="h-3 w-40 mt-1" />
+            <div className="flex gap-8 mt-4">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex flex-col gap-1">
+                  <Skeleton className="h-7 w-12" />
+                  <Skeleton className="h-2.5 w-14" />
+                </div>
+              ))}
+            </div>
+            <Skeleton className="h-8 w-32 rounded-md mt-4" />
           </div>
-          <Skeleton className="h-32 w-48 rounded-lg hidden md:block" />
+          <Skeleton className="h-48 w-72 rounded-xl hidden md:block shrink-0" />
         </div>
+        <div className="h-px bg-border/30 -mx-6" />
       </header>
 
       {/* Overview skeleton */}

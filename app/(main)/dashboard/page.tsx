@@ -10,7 +10,6 @@ import { useAgentEventsContext } from "@/lib/websocket";
 import { useActiveLanguage } from "@/lib/active-language";
 import { ResizableLayout } from "@/components/ui/resizable-layout";
 import { PreservationDialog } from "@/components/search/PreservationDialog";
-import { LogoIcon } from "@/components/navigation/TongueKeeperLogo";
 import { fetchLanguages } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Zap, Search, BookOpen, GitMerge } from "lucide-react";
@@ -67,16 +66,17 @@ function DashboardContent() {
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-background">
-      {/* Top bar */}
-      <header className="flex shrink-0 items-center justify-between border-b border-border/40 bg-background/80 backdrop-blur-sm px-5 py-2.5">
-        <div className="flex items-center gap-2.5">
-          <LogoIcon size={18} className="text-primary/70" />
-          <h1 className="font-serif text-[15px] tracking-tight text-foreground/80 select-none">
-            Preservation Dashboard
-          </h1>
-        </div>
-        {isArchiveMode && <StatsBar languageCode={activeLanguage?.iso_code} />}
-      </header>
+      {/* Top bar — only shown when a language is active */}
+      {isArchiveMode && (
+        <header className="flex shrink-0 items-center justify-between border-b border-border/40 bg-background/80 backdrop-blur-sm px-5 py-2.5">
+          <div className="flex items-center gap-2.5">
+            <h1 className="font-serif text-[15px] tracking-tight text-foreground/80 select-none">
+              Preservation Dashboard
+            </h1>
+          </div>
+          <StatsBar languageCode={activeLanguage?.iso_code} />
+        </header>
+      )}
 
       {/* Main content */}
       {isArchiveMode ? (

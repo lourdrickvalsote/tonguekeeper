@@ -17,6 +17,7 @@ import { FilterBar } from "@/components/languages/FilterBar";
 import { LanguageTable } from "@/components/languages/LanguageTable";
 import { Map, TableProperties, Globe } from "lucide-react";
 
+
 const WorldMap = dynamic(
   () => import("@/components/languages/WorldMap").then((m) => m.WorldMap),
   {
@@ -29,6 +30,8 @@ const WorldMap = dynamic(
     ),
   }
 );
+
+const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
 
 // ── URL <-> Filters helpers ──────────────────────────────────────────────
 
@@ -86,10 +89,10 @@ export default function LanguageBrowserPage() {
     <Suspense
       fallback={
         <div className="flex h-full flex-col overflow-hidden bg-background">
-          <header className="flex shrink-0 items-center justify-between border-b border-border/60 bg-background/80 backdrop-blur-sm px-5 py-2">
+          <header className="flex shrink-0 items-center justify-between border-b border-border/40 bg-background/80 backdrop-blur-sm px-5 py-2.5">
             <Skeleton className="h-5 w-40" />
           </header>
-          <div className="flex-1 px-5 pt-6">
+          <div className="flex-1 px-5 pt-4">
             <TableSkeleton />
           </div>
         </div>
@@ -158,7 +161,15 @@ function LanguageBrowserContent() {
           lang.iso_code?.toLowerCase().includes(q) ||
           lang.glottocode.toLowerCase().includes(q) ||
           lang.language_family.toLowerCase().includes(q) ||
-          lang.macroarea.toLowerCase().includes(q)
+          lang.macroarea.toLowerCase().includes(q) ||
+          lang.countries?.some((c) => {
+            try {
+              const name = regionNames.of(c);
+              return name?.toLowerCase().includes(q);
+            } catch {
+              return c.toLowerCase().includes(q);
+            }
+          })
       );
     }
 
@@ -208,66 +219,44 @@ function LanguageBrowserContent() {
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-background">
-      {/* ── Header ──────────────────────────────────────────────── */}
-      <header className="flex shrink-0 items-center justify-between border-b border-border/60 bg-background/80 backdrop-blur-sm px-5 py-2">
-        <h1 className="font-serif text-base tracking-tight text-foreground/80 select-none">
-          Endangered Languages
-        </h1>
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="flex flex-col flex-1 min-h-0"
+      >
+        {/* ── Header ──────────────────────────────────────────────── */}
+        <header className="flex shrink-0 items-center justify-between border-b border-border/40 bg-background/80 backdrop-blur-sm px-5 py-2.5">
+          <h1 className="font-serif text-[15px] tracking-tight text-foreground/80 select-none">
+            Endangered Languages
+          </h1>
 
+          <TabsList>
+            <TabsTrigger value="table" className="gap-1.5">
+              <TableProperties className="h-3.5 w-3.5" />
+              Table
+            </TabsTrigger>
+            <TabsTrigger value="map" className="gap-1.5">
+              <Map className="h-3.5 w-3.5" />
+              Map
+            </TabsTrigger>
+          </TabsList>
+        </header>
+
+        {/* ── Stats Strip ─────────────────────────────────────────── */}
         <LanguageBrowserStats stats={stats} />
-      </header>
 
-      {/* ── Filter Bar ──────────────────────────────────────────── */}
-      <FilterBar
-        filters={filters}
-        onFiltersChange={handleFiltersChange}
-        totalResults={filteredLanguages.length}
-        totalLanguages={total}
-      />
+        {/* ── Filter Bar ──────────────────────────────────────────── */}
+        <FilterBar
+          filters={filters}
+          onFiltersChange={handleFiltersChange}
+          totalResults={filteredLanguages.length}
+          totalLanguages={total}
+        />
 
-      {/* ── Tabs + Content ──────────────────────────────────────── */}
-      <div className="flex flex-1 flex-col min-h-0 px-5 pt-3 pb-4">
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="flex flex-col flex-1 min-h-0"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <TabsList>
-              <TabsTrigger value="table" className="gap-1.5">
-                <TableProperties className="h-3.5 w-3.5" />
-                Table
-              </TabsTrigger>
-              <TabsTrigger value="map" className="gap-1.5">
-                <Map className="h-3.5 w-3.5" />
-                Map
-              </TabsTrigger>
-            </TabsList>
-
-            <p className="text-xs text-muted-foreground/60 hidden md:block">
-              Data from{" "}
-              <a
-                href="https://glottolog.org"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline underline-offset-2 hover:text-muted-foreground transition-colors"
-              >
-                Glottolog
-              </a>{" "}
-              &{" "}
-              <a
-                href="https://endangeredlanguages.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline underline-offset-2 hover:text-muted-foreground transition-colors"
-              >
-                ELP
-              </a>
-            </p>
-          </div>
-
+        {/* ── Content ─────────────────────────────────────────────── */}
+        <div className="flex flex-1 flex-col min-h-0 px-5 pb-2">
           {/* ── Table View ────────────────────────────────────── */}
-          <TabsContent value="table" className="flex-1 min-h-0">
+          <TabsContent value="table" className="flex-1 min-h-0 mt-0">
             {isLoading ? (
               <TableSkeleton />
             ) : (
@@ -279,13 +268,35 @@ function LanguageBrowserContent() {
           </TabsContent>
 
           {/* ── Map View ──────────────────────────────────────── */}
-          <TabsContent value="map" className="flex-1 min-h-0">
+          <TabsContent value="map" className="flex-1 min-h-0 mt-0">
             {activeTab === "map" && (
               <WorldMap languages={filteredLanguages} />
             )}
           </TabsContent>
-        </Tabs>
-      </div>
+
+          {/* ── Attribution ───────────────────────────────────── */}
+          <p className="text-[10px] text-muted-foreground/30 text-center py-1.5 shrink-0 select-none hidden md:block">
+            Data from{" "}
+            <a
+              href="https://glottolog.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-2 hover:text-muted-foreground/50 transition-colors"
+            >
+              Glottolog
+            </a>{" "}
+            &{" "}
+            <a
+              href="https://endangeredlanguages.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-2 hover:text-muted-foreground/50 transition-colors"
+            >
+              ELP
+            </a>
+          </p>
+        </div>
+      </Tabs>
     </div>
   );
 }
@@ -294,8 +305,8 @@ function LanguageBrowserContent() {
 
 function TableSkeleton() {
   return (
-    <div className="rounded-lg border border-border/50 overflow-hidden">
-      <div className="border-b border-border/40 bg-muted/30 px-4 py-2.5">
+    <div className="overflow-hidden">
+      <div className="border-b border-border/40 bg-muted/20 px-4 py-2.5">
         <div className="flex gap-12">
           <Skeleton className="h-3 w-20" />
           <Skeleton className="h-3 w-16" />

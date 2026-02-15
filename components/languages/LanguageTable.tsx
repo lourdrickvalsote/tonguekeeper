@@ -114,7 +114,7 @@ export function LanguageTable({ languages, totalLanguages }: LanguageTableProps)
         ),
         sortUndefined: "last",
         size: 100,
-        meta: { align: "right", hideBelow: "md" },
+        meta: { hideBelow: "md" },
       }),
 
       // 4. Region
@@ -161,7 +161,11 @@ export function LanguageTable({ languages, totalLanguages }: LanguageTableProps)
             </div>
           );
         },
-        enableSorting: false,
+        sortingFn: (rowA, rowB) => {
+          const a = rowA.original.countries?.[0] ?? "";
+          const b = rowB.original.countries?.[0] ?? "";
+          return a.localeCompare(b);
+        },
         size: 150,
         meta: { hideBelow: "lg" },
       }),
@@ -200,7 +204,7 @@ export function LanguageTable({ languages, totalLanguages }: LanguageTableProps)
             );
           },
           size: 120,
-          meta: { align: "right", hideBelow: "lg" },
+          meta: { hideBelow: "lg" },
         }
       ),
 
@@ -263,19 +267,10 @@ export function LanguageTable({ languages, totalLanguages }: LanguageTableProps)
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      {/* Row count */}
-      <div className="flex items-center justify-between px-1 pb-2">
-        <p className="text-xs text-muted-foreground/60 font-mono tabular-nums">
-          {languages.length === totalLanguages
-            ? `${totalLanguages.toLocaleString()} languages`
-            : `${languages.length.toLocaleString()} of ${totalLanguages.toLocaleString()}`}
-        </p>
-      </div>
-
       {/* Table container */}
-      <div className="rounded-lg border border-border/50 overflow-hidden flex flex-col min-h-0 flex-1">
+      <div className="overflow-hidden flex flex-col min-h-0 flex-1">
         {/* Header */}
-        <div className="border-b border-border/40 bg-muted/30 shrink-0">
+        <div className="border-b border-border/40 bg-muted/20 shrink-0">
           {table.getHeaderGroups().map((headerGroup) => (
             <div key={headerGroup.id} className="flex">
               {headerGroup.headers.map((header) => {
@@ -288,14 +283,14 @@ export function LanguageTable({ languages, totalLanguages }: LanguageTableProps)
                   <div
                     key={header.id}
                     className={cn(
-                      "px-4 py-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground shrink-0",
+                      "px-4 py-2.5 text-[11px] font-medium font-serif uppercase tracking-wider text-muted-foreground min-w-0",
                       meta?.align === "right" && "text-right",
                       meta?.hideBelow === "md" && "hidden md:block",
                       meta?.hideBelow === "lg" && "hidden lg:block",
                       canSort &&
                         "cursor-pointer select-none hover:text-foreground transition-colors"
                     )}
-                    style={{ width: header.getSize() }}
+                    style={{ flex: header.getSize() / 80 }}
                     onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
                   >
                     <span className="flex items-center gap-1">
@@ -336,7 +331,7 @@ export function LanguageTable({ languages, totalLanguages }: LanguageTableProps)
                 <div
                   key={row.id}
                   className={cn(
-                    "flex items-center border-b border-border/20 hover:bg-secondary/30 transition-colors cursor-pointer",
+                    "flex items-center border-b border-border/20 hover:bg-secondary/20 transition-colors cursor-pointer",
                     virtualRow.index % 2 === 1 && "bg-muted/10"
                   )}
                   style={{
@@ -357,13 +352,13 @@ export function LanguageTable({ languages, totalLanguages }: LanguageTableProps)
                       <div
                         key={cell.id}
                         className={cn(
-                          "px-4 flex items-center text-sm text-muted-foreground shrink-0",
+                          "px-4 flex items-center text-sm text-muted-foreground min-w-0",
                           meta?.align === "right" && "justify-end",
                           meta?.hideBelow === "md" && "hidden md:flex",
                           meta?.hideBelow === "lg" && "hidden lg:flex"
                         )}
                         style={{
-                          width: cell.column.getSize(),
+                          flex: cell.column.getSize() / 80,
                           height: ROW_HEIGHT,
                         }}
                       >

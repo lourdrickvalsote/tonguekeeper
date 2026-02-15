@@ -4,6 +4,8 @@
 
 An AI-powered platform that autonomously discovers, aggregates, and cross-references endangered language content scattered across the internet — transforming fragments into a unified, searchable, living linguistic archive.
 
+**[Live Demo](https://tonguekeeper.vercel.app)**
+
 ---
 
 ## The Problem
@@ -119,7 +121,7 @@ TongueKeeper deploys a swarm of AI agents that autonomously crawl the web, disco
 ### Install
 
 ```bash
-git clone https://github.com/your-username/tonguekeeper.git
+git clone https://github.com/lourdrickvalsote/tonguekeeper.git
 cd tonguekeeper
 npm install --legacy-peer-deps
 ```
@@ -239,6 +241,26 @@ tonguekeeper/
 | **HeyGen** | Avatar video generation for pronunciation demonstrations |
 | **Cloudflare** | R2 object storage for pipeline artifacts; KV for query caching |
 | **RunPod** | Serverless GPU for Whisper audio transcription |
+
+---
+
+## Deployment
+
+The app runs across three services:
+
+| Service | Platform | Purpose |
+|---|---|---|
+| Next.js frontend + API routes | Vercel | Dashboard, search, language browser |
+| WS server + orchestrator + agents | Railway | Pipeline execution, real-time events |
+| ML service (optional) | Railway | YouTube audio transcription |
+
+See **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** for the full deployment guide.
+
+---
+
+## License
+
+MIT
 
 ---
 
