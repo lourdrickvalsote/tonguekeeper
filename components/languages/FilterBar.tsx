@@ -200,112 +200,115 @@ export function FilterBar({
   return (
     <div className={cn("border-b border-border/40", className)}>
       {/* ── Top bar ────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2 px-5 py-2">
+      <div className="flex items-center gap-3 px-5 py-2.5">
         {/* Search */}
-        <div className="relative flex-1 max-w-md">
+        <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/60" />
           <input
             type="text"
             placeholder="Search languages, ISO codes, families\u2026"
             value={searchValue}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full rounded-lg border border-border/60 bg-background pl-8 pr-8 py-1.5 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/40 transition-colors"
+            className="w-full rounded-lg border border-border/50 bg-secondary/30 pl-8 pr-8 py-1.5 text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 focus:bg-background transition-all duration-150"
           />
           {searchValue && (
             <button
               onClick={() => handleSearchChange("")}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors cursor-pointer"
             >
               <X className="h-3.5 w-3.5" />
             </button>
           )}
         </div>
 
-        {/* Filters toggle */}
-        <button
-          onClick={() => setPanelOpen((p) => !p)}
-          className={cn(
-            "relative flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors",
-            panelOpen
-              ? "border-primary/40 bg-primary/5 text-primary"
-              : "border-border/60 text-muted-foreground hover:text-foreground hover:border-border"
-          )}
-        >
-          <SlidersHorizontal className="h-3.5 w-3.5" />
-          Filters
-          {activeFilterCount > 0 && (
-            <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground px-1">
-              {activeFilterCount}
-            </span>
-          )}
-          <ChevronDown
-            className={cn(
-              "h-3 w-3 transition-transform duration-150",
-              panelOpen && "rotate-180"
-            )}
-          />
-        </button>
-
-        {/* Sort */}
-        <div className="relative" ref={sortRef}>
+        {/* Action button group */}
+        <div className="flex items-center gap-1.5">
+          {/* Filters toggle */}
           <button
-            onClick={() => setSortOpen((p) => !p)}
-            className="flex items-center gap-1.5 rounded-lg border border-border/60 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border transition-colors"
+            onClick={() => setPanelOpen((p) => !p)}
+            className={cn(
+              "relative flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer select-none",
+              panelOpen
+                ? "border-primary/40 bg-primary/5 text-primary"
+                : "border-border/60 text-muted-foreground hover:text-foreground hover:border-border"
+            )}
           >
-            {SORT_OPTIONS.find((o) => o.value === filters.sort)?.label ||
-              "Sort by"}
+            <SlidersHorizontal className="h-3.5 w-3.5" />
+            Filters
+            {activeFilterCount > 0 && (
+              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground px-1">
+                {activeFilterCount}
+              </span>
+            )}
             <ChevronDown
               className={cn(
                 "h-3 w-3 transition-transform duration-150",
-                sortOpen && "rotate-180"
+                panelOpen && "rotate-180"
               )}
             />
           </button>
-          {sortOpen && (
-            <div className="absolute right-0 top-full mt-1 z-50 min-w-[180px] rounded-lg border border-border/60 bg-background shadow-lg py-1">
-              {SORT_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => {
-                    update({
-                      sort:
-                        filters.sort === option.value
-                          ? undefined
-                          : option.value,
-                    });
-                    setSortOpen(false);
-                  }}
-                  className={cn(
-                    "flex w-full items-center gap-2 px-3 py-1.5 text-xs transition-colors text-left",
-                    filters.sort === option.value
-                      ? "text-primary font-medium bg-primary/5"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                  )}
-                >
-                  <Check
+
+          {/* Sort */}
+          <div className="relative" ref={sortRef}>
+            <button
+              onClick={() => setSortOpen((p) => !p)}
+              className="flex items-center gap-1.5 rounded-lg border border-border/60 bg-secondary/20 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/40 hover:border-border transition-colors cursor-pointer"
+            >
+              {SORT_OPTIONS.find((o) => o.value === filters.sort)?.label ||
+                "Sort by"}
+              <ChevronDown
+                className={cn(
+                  "h-3 w-3 transition-transform duration-150",
+                  sortOpen && "rotate-180"
+                )}
+              />
+            </button>
+            {sortOpen && (
+              <div className="absolute right-0 top-full mt-1 z-50 min-w-[180px] rounded-lg border border-border/60 bg-background shadow-lg py-1">
+                {SORT_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => {
+                      update({
+                        sort:
+                          filters.sort === option.value
+                            ? undefined
+                            : option.value,
+                      });
+                      setSortOpen(false);
+                    }}
                     className={cn(
-                      "h-3 w-3 shrink-0",
+                      "flex w-full items-center gap-2 px-3 py-1.5 text-xs transition-colors text-left cursor-pointer",
                       filters.sort === option.value
-                        ? "opacity-100"
-                        : "opacity-0"
+                        ? "text-primary font-medium bg-primary/5"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                     )}
-                  />
-                  {option.label}
-                </button>
-              ))}
-            </div>
+                  >
+                    <Check
+                      className={cn(
+                        "h-3 w-3 shrink-0",
+                        filters.sort === option.value
+                          ? "opacity-100"
+                          : "opacity-0"
+                      )}
+                    />
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Clear all */}
+          {hasAnyFilter && (
+            <button
+              onClick={clearAll}
+              className="text-xs text-muted-foreground/60 hover:text-destructive transition-colors whitespace-nowrap cursor-pointer"
+            >
+              Clear all
+            </button>
           )}
         </div>
-
-        {/* Clear all */}
-        {hasAnyFilter && (
-          <button
-            onClick={clearAll}
-            className="text-xs text-muted-foreground/60 hover:text-destructive transition-colors whitespace-nowrap"
-          >
-            Clear all
-          </button>
-        )}
 
         {/* Results count */}
         <span className="text-[11px] text-muted-foreground/50 font-mono tabular-nums shrink-0 ml-auto">
@@ -318,146 +321,168 @@ export function FilterBar({
       {/* ── Collapsible filter panel ───────────────────────────── */}
       <div
         className={cn(
-          "grid transition-[grid-template-rows] duration-200 ease-out",
+          "grid transition-[grid-template-rows] duration-250 ease-out",
           panelOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
         )}
       >
         <div className="overflow-hidden">
-          <div className="px-5 pb-3 pt-1 space-y-3">
-            {/* Endangerment */}
-            <FilterSection label="Endangerment">
-              <div className="flex flex-wrap gap-1.5">
-                {ENDANGERMENT_OPTIONS.map((status) => {
-                  const active = filters.endangerment?.includes(status);
-                  const color = ENDANGERMENT_COLORS[status];
-                  return (
-                    <button
-                      key={status}
-                      onClick={() => toggleArrayFilter("endangerment", status)}
-                      className={cn(
-                        "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium transition-all border",
-                        active
-                          ? "border-transparent"
-                          : "border-border/40 text-muted-foreground hover:border-border"
-                      )}
-                      style={
-                        active
-                          ? {
-                              backgroundColor: `${color}18`,
-                              color: color,
-                              borderColor: `${color}30`,
-                            }
-                          : undefined
-                      }
-                    >
-                      <span
-                        className="h-1.5 w-1.5 rounded-full shrink-0"
-                        style={{ backgroundColor: color }}
-                      />
-                      {ENDANGERMENT_LABELS[status]}
-                    </button>
-                  );
-                })}
-              </div>
-            </FilterSection>
-
-            {/* Region */}
-            <FilterSection label="Region">
-              <div className="flex flex-wrap gap-1.5">
-                {MACROAREAS.map((area) => {
-                  const active = filters.macroarea?.includes(area);
-                  return (
-                    <button
-                      key={area}
-                      onClick={() => toggleArrayFilter("macroarea", area)}
-                      className={cn(
-                        "rounded-full px-2.5 py-1 text-[11px] font-medium transition-all border",
-                        active
-                          ? "bg-primary/10 text-primary border-primary/30"
-                          : "border-border/40 text-muted-foreground hover:border-border hover:text-foreground"
-                      )}
-                    >
-                      {area}
-                    </button>
-                  );
-                })}
-              </div>
-            </FilterSection>
-
-            {/* Bottom row: Family + Speakers + Preserved toggle */}
-            <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
-              {/* Language family */}
-              <FilterSection label="Language Family" inline>
-                <input
-                  type="text"
-                  placeholder="e.g. Austronesian, Uralic\u2026"
-                  value={familySearch}
-                  onChange={(e) => handleFamilyChange(e.target.value)}
-                  className="w-48 rounded-md border border-border/60 bg-background px-2.5 py-1 text-xs placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/40 transition-colors"
-                />
-                {familySearch && (
-                  <button
-                    onClick={() => handleFamilyChange("")}
-                    className="text-muted-foreground/40 hover:text-muted-foreground transition-colors"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                )}
+          <div className="mx-4 mb-3 mt-1.5 rounded-lg border border-border/25 bg-secondary/15">
+            <div className="px-4 py-3 space-y-2.5">
+              {/* Endangerment */}
+              <FilterSection label="Endangerment">
+                <div className="flex flex-wrap gap-1.5">
+                  {ENDANGERMENT_OPTIONS.map((status) => {
+                    const active = filters.endangerment?.includes(status);
+                    const color = ENDANGERMENT_COLORS[status];
+                    return (
+                      <button
+                        key={status}
+                        onClick={() => toggleArrayFilter("endangerment", status)}
+                        className={cn(
+                          "flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium transition-all duration-150 border cursor-pointer select-none",
+                          active
+                            ? "border-transparent shadow-sm"
+                            : "border-border/30 text-muted-foreground/70 hover:text-muted-foreground hover:border-border/50 hover:bg-secondary/40"
+                        )}
+                        style={
+                          active
+                            ? {
+                                backgroundColor: `${color}15`,
+                                color: color,
+                                borderColor: `${color}40`,
+                                boxShadow: `0 1px 3px ${color}12`,
+                              }
+                            : undefined
+                        }
+                      >
+                        <span
+                          className={cn(
+                            "h-2 w-2 rounded-full shrink-0 transition-opacity",
+                            !active && "opacity-40"
+                          )}
+                          style={{ backgroundColor: color }}
+                        />
+                        {ENDANGERMENT_LABELS[status]}
+                      </button>
+                    );
+                  })}
+                </div>
               </FilterSection>
 
-              {/* Speaker count */}
-              <FilterSection label="Speakers" inline>
-                <input
-                  type="number"
-                  placeholder="Min"
-                  value={minSpeakers}
-                  onChange={(e) =>
-                    handleSpeakersChange("min", e.target.value)
-                  }
-                  min={0}
-                  className="w-20 rounded-md border border-border/60 bg-background px-2 py-1 text-xs font-mono tabular-nums placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/40 transition-colors"
-                />
-                <span className="text-muted-foreground/40 text-xs">\u2014</span>
-                <input
-                  type="number"
-                  placeholder="Max"
-                  value={maxSpeakers}
-                  onChange={(e) =>
-                    handleSpeakersChange("max", e.target.value)
-                  }
-                  min={0}
-                  className="w-20 rounded-md border border-border/60 bg-background px-2 py-1 text-xs font-mono tabular-nums placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/40 transition-colors"
-                />
+              {/* Region */}
+              <FilterSection label="Region">
+                <div className="flex flex-wrap gap-1.5">
+                  {MACROAREAS.map((area) => {
+                    const active = filters.macroarea?.includes(area);
+                    return (
+                      <button
+                        key={area}
+                        onClick={() => toggleArrayFilter("macroarea", area)}
+                        className={cn(
+                          "rounded-full px-3 py-1 text-[11px] font-medium transition-all duration-150 border cursor-pointer select-none",
+                          active
+                            ? "bg-primary/10 text-primary border-primary/25 shadow-sm"
+                            : "border-border/30 text-muted-foreground/70 hover:text-muted-foreground hover:border-border/50 hover:bg-secondary/40"
+                        )}
+                      >
+                        {area}
+                      </button>
+                    );
+                  })}
+                </div>
               </FilterSection>
 
-              {/* Has preservation data */}
-              <FilterSection label="Preserved" inline>
-                <button
-                  onClick={() =>
-                    update({
-                      has_preservation: filters.has_preservation
-                        ? undefined
-                        : true,
-                    })
-                  }
-                  className={cn(
-                    "relative h-5 w-9 rounded-full transition-colors duration-200",
-                    filters.has_preservation
-                      ? "bg-primary"
-                      : "bg-border"
+              {/* Divider */}
+              <div className="h-px bg-border/20" />
+
+              {/* Bottom row: Family + Speakers + Preserved toggle */}
+              <div className="flex flex-wrap items-center gap-x-8 gap-y-3 pt-0.5">
+                {/* Language family */}
+                <FilterSection label="Language Family" inline>
+                  <input
+                    type="text"
+                    placeholder="e.g. Austronesian, Uralic\u2026"
+                    value={familySearch}
+                    onChange={(e) => handleFamilyChange(e.target.value)}
+                    className="w-44 rounded-md border border-border/40 bg-secondary/20 px-2.5 py-1.5 text-xs placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary/30 focus:bg-background transition-all duration-150"
+                  />
+                  {familySearch && (
+                    <button
+                      onClick={() => handleFamilyChange("")}
+                      className="text-muted-foreground/40 hover:text-muted-foreground transition-colors cursor-pointer"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
                   )}
-                >
+                </FilterSection>
+
+                {/* Vertical separator */}
+                <div className="h-5 w-px bg-border/25 hidden sm:block" />
+
+                {/* Speaker count */}
+                <FilterSection label="Speakers" inline>
+                  <input
+                    type="number"
+                    placeholder="Min"
+                    value={minSpeakers}
+                    onChange={(e) =>
+                      handleSpeakersChange("min", e.target.value)
+                    }
+                    min={0}
+                    className="w-[4.5rem] rounded-md border border-border/40 bg-secondary/20 px-2 py-1.5 text-xs font-mono tabular-nums placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary/30 focus:bg-background transition-all duration-150"
+                  />
+                  <span className="text-muted-foreground/30 text-[10px] select-none">to</span>
+                  <input
+                    type="number"
+                    placeholder="Max"
+                    value={maxSpeakers}
+                    onChange={(e) =>
+                      handleSpeakersChange("max", e.target.value)
+                    }
+                    min={0}
+                    className="w-[4.5rem] rounded-md border border-border/40 bg-secondary/20 px-2 py-1.5 text-xs font-mono tabular-nums placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/15 focus:border-primary/30 focus:bg-background transition-all duration-150"
+                  />
+                </FilterSection>
+
+                {/* Vertical separator */}
+                <div className="h-5 w-px bg-border/25 hidden sm:block" />
+
+                {/* Has preservation data */}
+                <FilterSection label="Preserved" inline>
+                  <button
+                    onClick={() =>
+                      update({
+                        has_preservation: filters.has_preservation
+                          ? undefined
+                          : true,
+                      })
+                    }
+                    className={cn(
+                      "relative h-[22px] w-10 rounded-full transition-colors duration-200 shrink-0 cursor-pointer",
+                      filters.has_preservation
+                        ? "bg-primary"
+                        : "bg-border/80 hover:bg-border"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "absolute top-[3px] left-[3px] h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200",
+                        filters.has_preservation && "translate-x-[18px]"
+                      )}
+                    />
+                  </button>
                   <span
                     className={cn(
-                      "absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200",
-                      filters.has_preservation && "translate-x-4"
+                      "text-[11px] transition-colors select-none",
+                      filters.has_preservation
+                        ? "text-primary font-medium"
+                        : "text-muted-foreground/70"
                     )}
-                  />
-                </button>
-                <span className="text-[11px] text-muted-foreground">
-                  Only preserved
-                </span>
-              </FilterSection>
+                  >
+                    Only preserved
+                  </span>
+                </FilterSection>
+              </div>
             </div>
           </div>
         </div>
@@ -480,13 +505,13 @@ function FilterSection({
   return (
     <div
       className={cn(
-        inline ? "flex items-center gap-2" : "space-y-1.5"
+        inline ? "flex items-center gap-2.5" : "space-y-1.5"
       )}
     >
-      <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60 shrink-0">
+      <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/80 shrink-0">
         {label}
       </span>
-      <div className={cn("flex items-center gap-1.5", inline && "flex-wrap")}>
+      <div className={cn("flex items-center gap-2", inline && "flex-wrap")}>
         {children}
       </div>
     </div>

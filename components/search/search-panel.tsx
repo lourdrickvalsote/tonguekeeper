@@ -333,15 +333,15 @@ export function SearchPanel({ language, showHealthTab = true, embedded = false, 
             )}
           </div>
           {language && (
-            embedded ? (
-              <Link
-                href="/dashboard"
+            embedded && onNavigateToDashboard ? (
+              <button
+                onClick={onNavigateToDashboard}
                 className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
               >
                 <LayoutDashboard className="h-3 w-3" />
                 Go to Dashboard
-              </Link>
-            ) : (
+              </button>
+            ) : !embedded ? (
               <Link
                 href={`/languages/${language.glottocode}`}
                 className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
@@ -349,7 +349,7 @@ export function SearchPanel({ language, showHealthTab = true, embedded = false, 
                 View page
                 <ExternalLink className="h-3 w-3" />
               </Link>
-            )
+            ) : null
           )}
         </div>
       </div>

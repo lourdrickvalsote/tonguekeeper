@@ -68,7 +68,7 @@ function DashboardContent() {
     <div className="flex h-full flex-col overflow-hidden bg-background">
       {/* Top bar — only shown when a language is active */}
       {isArchiveMode && (
-        <header className="flex shrink-0 items-center justify-between border-b border-border/40 bg-background/80 backdrop-blur-sm px-5 py-2.5">
+        <header className="flex shrink-0 items-center justify-between border-b border-sidebar-border px-5 py-2.5" style={{ backgroundColor: "#F0EAE1" }}>
           <div className="flex items-center gap-2.5">
             <h1 className="font-serif text-[15px] tracking-tight text-foreground/80 select-none">
               Preservation Dashboard

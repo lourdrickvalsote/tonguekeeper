@@ -8,6 +8,7 @@ import { fetchLanguages } from "@/lib/api";
 import {
   LayoutDashboard,
   Globe,
+  Info,
   ChevronLeft,
   ChevronRight,
   Shield,
@@ -18,6 +19,7 @@ import { LogoIcon } from "./TongueKeeperLogo";
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/languages", label: "Languages", icon: Globe },
+  { href: "/about", label: "About", icon: Info },
 ];
 
 const STORAGE_KEY = "tk-sidebar-collapsed";

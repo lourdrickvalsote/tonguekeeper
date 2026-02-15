@@ -173,13 +173,13 @@ export default function SplashPage() {
               className="text-lg md:text-xl leading-relaxed"
               style={{ color: "rgba(255, 252, 247, 0.65)" }}
             >
-              Every language is a universe of thought.
+              5,000+ languages are disappearing.
             </p>
             <p
               className="text-lg md:text-xl leading-relaxed font-serif italic"
               style={{ color: "rgba(255, 252, 247, 0.4)" }}
             >
-              We keep them alive.
+              We're keeping the flame alive.
             </p>
           </motion.div>
 

@@ -379,6 +379,7 @@ export function useAgentEvents(): UseAgentEventsReturn {
   const clearEvents = useCallback(() => {
     setEvents([]);
     knownIdsRef.current.clear();
+    setPipelineStatus((prev) => prev === "running" || prev === "cancelling" ? prev : "idle");
   }, []);
 
   const startPipeline = useCallback(

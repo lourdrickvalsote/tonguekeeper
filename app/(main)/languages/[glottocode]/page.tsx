@@ -339,12 +339,20 @@ function LanguageHeader({ language }: { language: LanguageEntry }) {
 // ── Body (archive or empty state) ────────────────────────────────────────────
 
 function LanguageBody({ language }: { language: LanguageEntry }) {
-  const { pipelineStatus } = useAgentEventsContext();
+  const router = useRouter();
+  const { setActiveLanguage } = useActiveLanguage();
+  const { pipelineStatus, clearEvents } = useAgentEventsContext();
   const hasData = language.preservation_status.vocabulary_entries > 0;
   const isActive = pipelineStatus === "running" || pipelineStatus === "complete";
 
+  const handleGoToDashboard = useCallback(() => {
+    clearEvents();
+    setActiveLanguage(language);
+    router.push("/dashboard");
+  }, [language, router, setActiveLanguage, clearEvents]);
+
   if (hasData || isActive) {
-    return <SearchPanel language={language} embedded />;
+    return <SearchPanel language={language} embedded onNavigateToDashboard={handleGoToDashboard} />;
   }
 
   return <EmptyState language={language} />;
@@ -355,18 +363,21 @@ function LanguageBody({ language }: { language: LanguageEntry }) {
 function EmptyState({ language }: { language: LanguageEntry }) {
   const router = useRouter();
   const { setActiveLanguage } = useActiveLanguage();
+  const { clearEvents } = useAgentEventsContext();
 
   const handlePreservation = useCallback(() => {
     // Set active language in context and flag auto-start for dashboard
+    clearEvents();
     setActiveLanguage(language);
     sessionStorage.setItem("tk-auto-start", "true");
     router.push("/dashboard");
-  }, [language, router, setActiveLanguage]);
+  }, [language, router, setActiveLanguage, clearEvents]);
 
   const handleGoToDashboard = useCallback(() => {
+    clearEvents();
     setActiveLanguage(language);
     router.push("/dashboard");
-  }, [language, router, setActiveLanguage]);
+  }, [language, router, setActiveLanguage, clearEvents]);
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
